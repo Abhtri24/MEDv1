@@ -1,0 +1,40 @@
+﻿@model MemberReportsViewModel
+@{ ViewData["Title"] = Model.MemberName; }
+
+<a asp-action="Index">&larr; Find member</a>
+<h2 class="mt-2">@Model.MemberName</h2>
+
+<form method="get" asp-action="Details" asp-route-id="@Model.MemberId" class="d-flex gap-2 mb-3">
+    <input name="q" value="@Model.Query" class="form-control" placeholder="Search report, e.g. CBP" />
+    <button class="btn btn-primary">Search</button>
+</form>
+
+<table class="table table-sm align-middle">
+    <thead>
+        <tr><th>Report</th><th>Package</th><th>Availed on</th><th>Status</th><th>Last updated</th><th></th></tr>
+    </thead>
+    <tbody>
+    @foreach (var r in Model.Reports)
+    {
+        <tr>
+            <td>@r.ReportName <span class="text-muted">(@r.ReportCode)</span></td>
+            <td>@r.PackageName</td>
+            <td>@r.AvailedOn.ToString("dd MMM yyyy")</td>
+            <td><span class="badge @(r.Status == "ENTERED" ? "bg-success" : "bg-secondary")">@r.Status</span></td>
+            <td>@(r.UpdatedOn?.ToString("dd MMM yyyy, HH:mm") ?? "-")</td>
+            <td>
+                <a class="btn btn-sm btn-outline-primary"
+                   asp-controller="Entry" asp-action="Form" asp-route-id="@r.ReportResultId">
+                    @(r.Status == "PENDING" ? "Enter" : "Edit")
+                </a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@if (!Model.Reports.Any())
+{
+    <p class="text-muted">No matching reports for this member.</p>
+}
+}

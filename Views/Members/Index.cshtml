@@ -1,0 +1,23 @@
+﻿@model MemberSearchViewModel
+@{
+    ViewData["Title"] = "Find member";
+}
+
+<h2>Find member</h2>
+<form method="get" asp-action="Index" class="d-flex gap-2 mb-3">
+    <input name="q" value="@Model.Query" class="form-control" placeholder="Member name" autofocus />
+    <button class="btn btn-primary">Search</button>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(Model.Query) && !Model.Results.Any())
+{
+    <p class="text-muted">No members found.</p>
+}
+
+<div class="list-group">
+    @foreach (var m in Model.Results)
+    {
+        <a class="list-group-item list-group-item-action"
+           asp-action="Details" asp-route-id="@m.MemberId">@m.FullName</a>
+    }
+</div>

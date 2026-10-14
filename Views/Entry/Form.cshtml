@@ -1,0 +1,55 @@
+﻿@model EntryFormViewModel
+@{
+    ViewData["Title"] = Model.ReportName;
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+}
+
+<a asp-controller="Members" asp-action="Details" asp-route-id="@Model.MemberId">&larr; @Model.MemberName</a>
+<h2 class="mt-2">@Model.ReportName</h2>
+<p class="text-muted">
+    @Model.MemberName &middot; @Model.PackageName &middot;
+    Last updated: @(Model.UpdatedOn?.ToString("dd MMM yyyy, HH:mm") ?? "not entered")
+</p>
+
+<form method="post">
+    @foreach (var f in Model.Fields)
+    {
+        var label = f.Unit is null ? f.TestName : $"{f.TestName} ({f.Unit})";
+        var cls = "form-control" + (f.Error is null ? "" : " is-invalid");
+
+        <div class="mb-3">
+            <label class="form-label" for="f_@f.TestCode">
+                @label @if (f.IsRequired) {
+                <span class="text-danger">*</span>
+            }
+        </label>
+
+        @if (f.DataType == "NUMBER")
+        {
+            <input type="number" step="any" id="f_@f.TestCode" name="Inputs[@f.TestCode]"
+                   value="@f.Value" class="@cls" required="@f.IsRequired"
+                   min="@(f.MinValue?.ToString(inv))" max="@(f.MaxValue?.ToString(inv))" />
+        }
+        else if (f.DataType == "DATE")
+        {
+            <input type="date" id="f_@f.TestCode" name="Inputs[@f.TestCode]"
+                   value="@f.Value" class="@cls" required="@f.IsRequired" />
+        }
+        else
+        {
+            <input type="text" maxlength="1000" id="f_@f.TestCode" name="Inputs[@f.TestCode]"
+                   value="@f.Value" class="@cls" required="@f.IsRequired" />
+        }
+
+        @if (f.Error is not null)
+        {
+            <div class="invalid-feedback">@f.Error</div>
+        }
+        @if (f.DataType == "NUMBER" && (f.MinValue is not null || f.MaxValue is not null))
+        {
+            <div class="form-text">Allowed: @(f.MinValue?.ToString("0.####", inv)) to @(f.MaxValue?.ToString("0.####", inv))</div>
+        }
+    </div>
+}
+<button class="btn btn-primary">Save</button>
+</form>
