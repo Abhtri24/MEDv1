@@ -1,14 +1,17 @@
 using MEDv1.Data;
+using MEDv1.Abstractions;
+using MEDv1.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddSingleton<SqlConnectionFactory>();         
+builder.Services.AddSingleton<SqlConnectionFactory>();
 
-builder.Services.AddScoped<MemberRepository>();
-builder.Services.AddScoped<ReportResultRepository>();
-builder.Services.AddScoped<TestRepository>();
+builder.Services.AddScoped<IMemberRepository, MemberRepository>();
+builder.Services.AddScoped<IReportResultRepository, ReportResultRepository>();
+builder.Services.AddScoped<ITestRepository, TestRepository>();
+builder.Services.AddScoped<IEntryFormService, EntryFormService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -1,63 +1,29 @@
-﻿using System.Globalization;
-using Microsoft.AspNetCore.Mvc;
-using MEDv1.Data;
-using MEDv1.Models;
-using MEDv1.ViewModels;
+﻿using Microsoft.AspNetCore.Mvc;
+using MEDv1.Abstractions;
 namespace MEDv1.Controllers;
 
 public class EntryController : Controller
 {
-	private readonly ReportResultRepository _reportResults;
-	private readonly TestRepository _tests;
-
-	public EntryController(ReportResultRepository reportResults, TestRepository tests)
-	{
-		_reportResults = reportResults;
-		_tests = tests;
-	}
+	private readonly IEntryFormService _forms;
+	public EntryController(IEntryFormService forms) => _forms = forms;
 
 	[HttpGet]
 	public async Task<IActionResult> Form(int id)
 	{
-		var vm = await BuildFormAsync(id);
-		if (vm == null) return NotFound();
-		return View(vm);
+		var form = await _forms.BuildAsync(id);
+		if (form == null) return NotFound();
+		return View(form);
 	}
 
-	private async Task<EntryFormViewModel?> BuildFormAsync(int id)
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Form(int id, [FromForm(Name = "Inputs")] Dictionary<string, string?> inputs)
 	{
-		var header = await _reportResults.GetEntryHeaderAsync(id);
-		if (header == null) return null;
+		var result = await _forms.SaveAsync(id, inputs ?? new(), User.Identity?.Name ?? "staff");
+		if (result == null) return NotFound();
+		if (!result.Saved) return View(result.Form);
 
-		var tests = await _tests.ActiveForReportAsync(header.ReportCode);
-		var saved = await _reportResults.GetValuesAsync(id);
-
-		return new EntryFormViewModel
-		{
-			ReportResultId = header.ReportResultId,
-			MemberId = header.MemberId,
-			MemberName = header.MemberName,
-			PackageName = header.PackageName,
-			ReportName = header.ReportName,
-			UpdatedOn = header.UpdatedOn,
-			Fields = tests.Select(t => ToField(t, saved.GetValueOrDefault(t.TestCode))).ToList()
-		};
+		TempData["Message"] = $"{result.Form.ReportName} saved for {result.Form.MemberName}.";
+		return RedirectToAction("Details", "Members", new { id = result.Form.MemberId });
 	}
-
-	private static FieldViewModel ToField(Test test, SavedValues? saved) => new()
-	{
-		TestCode = test.TestCode,
-		TestName = test.TestName,
-		DataType = test.DataType,
-		Unit = test.Unit,
-		MinValue = test.MinValue,
-		MaxValue = test.MaxValue,
-		IsRequired = test.IsRequired,
-		Value = saved == null ? null : test.DataType switch
-		{
-			"NUMBER" => saved.ValueNumber?.ToString("0.####", CultureInfo.InvariantCulture),
-			"DATE" => saved.ValueDate?.ToString("yyyy-MM-dd"),
-			_ => saved.ValueText
-		}
-	};
 }

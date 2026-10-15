@@ -1,0 +1,72 @@
+﻿@model EntryField
+@{
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+    var f = Model;
+    var invalid = f.Error is null ? "" : " is-invalid";
+    var label = f.Unit is null ? f.TestName : $"{f.TestName} ({f.Unit})";
+}
+
+<div class="mb-3">
+    <label class="form-label" for="f_@f.TestCode">
+        @label @if (f.IsRequired) {
+        <span class="text-danger">*</span>
+    }
+</label>
+
+@if (f.DataType == "NUMBER")
+{
+    <input type="number" step="any" id="f_@f.TestCode" name="Inputs[@f.TestCode]"
+           value="@f.Value" class="form-control@(invalid)" required="@f.IsRequired"
+           min="@(f.MinValue?.ToString(inv))" max="@(f.MaxValue?.ToString(inv))" />
+}
+else if (f.DataType == "DATE")
+{
+    <input type="date" id="f_@f.TestCode" name="Inputs[@f.TestCode]"
+           value="@f.Value" class="form-control@(invalid)" required="@f.IsRequired" />
+}
+else if (f.DataType == "CHOICE" && f.InputStyle == "RADIO")
+{
+    @foreach (var o in f.Options)
+    {
+        <div class="form-check">
+            <input type="radio" class="form-check-input@(invalid)" id="f_@(f.TestCode)_@o.OptionCode"
+                   name="Inputs[@f.TestCode]" value="@o.OptionCode"
+                   checked="@(f.Value == o.OptionCode)" required="@f.IsRequired" />
+            <label class="form-check-label" for="f_@(f.TestCode)_@o.OptionCode">@o.OptionLabel</label>
+        </div>
+    }
+}
+else if (f.DataType == "CHOICE")
+{
+    <select id="f_@f.TestCode" name="Inputs[@f.TestCode]" class="form-select@(invalid)" required="@f.IsRequired">
+        <option value="">-- select --</option>
+        @foreach (var o in f.Options)
+        {
+            <option value="@o.OptionCode" selected="@(f.Value == o.OptionCode)">@o.OptionLabel</option>
+        }
+    </select>
+}
+else if (f.DataType == "BOOLEAN")
+{
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="f_@f.TestCode"
+               name="Inputs[@f.TestCode]" value="Y" checked="@(f.Value == "Y")" />
+        <input type="hidden" name="Inputs[@f.TestCode]" value="N" />
+        <label class="form-check-label" for="f_@f.TestCode">Yes</label>
+    </div>
+}
+else
+{
+    <input type="text" maxlength="1000" id="f_@f.TestCode" name="Inputs[@f.TestCode]"
+           value="@f.Value" class="form-control@(invalid)" required="@f.IsRequired" />
+}
+
+@if (f.Error is not null)
+{
+    <div class="invalid-feedback d-block">@f.Error</div>
+}
+@if (f.DataType == "NUMBER" && (f.MinValue is not null || f.MaxValue is not null))
+{
+    <div class="form-text">Allowed: @(f.MinValue?.ToString("0.####", inv)) to @(f.MaxValue?.ToString("0.####", inv))</div>
+}
+</div>

@@ -2,7 +2,9 @@
 using MEDv1.Models;
 namespace MEDv1.Data;
 
-public class MemberRepository
+using MEDv1.Abstractions;
+
+public class MemberRepository : IMemberRepository
 {
 	private readonly SqlConnectionFactory _db;
 	public MemberRepository(SqlConnectionFactory db) => _db = db;

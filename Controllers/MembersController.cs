@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MEDv1.Data;
+using MEDv1.Abstractions;
 using MEDv1.ViewModels;
 namespace MEDv1.Controllers;
 
 public class MembersController : Controller
 {
-	private readonly MemberRepository _members;
-	private readonly ReportResultRepository _reportResults;
+	private readonly IMemberRepository _members;
+	private readonly IReportResultRepository _reportResults;
 
-	public MembersController(MemberRepository members, ReportResultRepository reportResults)
+	public MembersController(IMemberRepository members, IReportResultRepository reportResults)
 	{
 		_members = members;
 		_reportResults = reportResults;

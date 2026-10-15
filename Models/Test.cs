@@ -11,4 +11,7 @@ public class Test
 	public decimal? MaxValue { get; set; }
 	public bool IsRequired { get; set; }
 	public int DisplayOrder { get; set; }
+
+	public string? InputStyle { get; set; }
+	public List<TestOption> Options { get; set; } = new();
 }
