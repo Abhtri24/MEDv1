@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using MEDv1.Abstractions;
 using MEDv1.Models;
+using Microsoft.AspNetCore.Connections;
 namespace MEDv1.Data;
 
 public class ReportResultRepository : IReportResultRepository
@@ -91,5 +92,39 @@ public class ReportResultRepository : IReportResultRepository
 		await connection.ExecuteAsync(statusSql, new { reportResultId, updatedBy }, transaction);
 
 		await transaction.CommitAsync();
+	}
+
+	public async Task<EntryHeader?> GetEntryHeaderByLabReportIdAsync(
+	string labReportId)
+	{
+
+		const string sql = """
+        SELECT
+            rr.ReportResultId,
+            m.MemberId,
+            m.FullName,
+            p.PackageName,
+            r.ReportCode,
+            r.ReportName,
+            av.AvailedOn,
+            rr.Status
+        FROM dbo.ReportResult rr
+        INNER JOIN dbo.PackageAvailment av
+            ON av.AvailmentId = rr.AvailmentId
+            AND av.PackageCode = rr.PackageCode
+        INNER JOIN dbo.Member m
+            ON m.MemberId = av.MemberId
+        INNER JOIN dbo.Package p
+            ON p.PackageCode = rr.PackageCode
+        INNER JOIN dbo.Report r
+            ON r.ReportCode = rr.ReportCode
+        WHERE rr.LabReportId = @LabReportId;
+        """;
+
+		await using var connection = await _db.OpenAsync();
+
+		return await connection.QuerySingleOrDefaultAsync<EntryHeader>(
+			sql,
+			new { LabReportId = labReportId });
 	}
 }

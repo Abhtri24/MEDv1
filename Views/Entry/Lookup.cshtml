@@ -1,0 +1,47 @@
+﻿@{
+    ViewData["Title"] = "Find Lab Report";
+}
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h2>Find Lab Report</h2>
+
+    <p class="text-muted">
+        Enter the unique lab report ID printed on the laboratory report.
+    </p>
+
+    @if (ViewData["Error"] is string error)
+    {
+        <div class="alert alert-danger" role="alert">
+            @error
+        </div>
+    }
+
+    <form asp-controller="Entry" asp-action="Lookup" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label for="labReportId" class="form-label">
+                Lab Report ID
+            </label>
+
+            <input type="text"
+                   id="labReportId"
+                   name="labReportId"
+                   class="form-control"
+                   placeholder="e.g. LAB-2026-000002"
+                   maxlength="100"
+                   required
+                   autofocus />
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Find Report
+        </button>
+
+        <a asp-controller="Members"
+           asp-action="Index"
+           class="btn btn-outline-secondary ms-2">
+            Back to Member Search
+        </a>
+    </form>
+</div>

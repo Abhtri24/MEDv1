@@ -6,7 +6,10 @@
     var label = f.Unit is null ? f.TestName : $"{f.TestName} ({f.Unit})";
 }
 
-<div class="mb-3">
+<div class="mb-3 entry-field"
+     data-test-code="@f.TestCode"
+     data-test-name="@f.TestName"
+     data-unit="@f.Unit">
     <label class="form-label" for="f_@f.TestCode">
         @label @if (f.IsRequired) {
         <span class="text-danger">*</span>
