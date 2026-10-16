@@ -17,6 +17,40 @@
     Last updated: @(Model.UpdatedOn?.ToString("dd MMM yyyy, HH:mm") ?? "not entered")
 </p>
 
+@{
+    var invalidFields = Model.Fields
+        .Where(f => !string.IsNullOrWhiteSpace(f.Error))
+        .ToList();
+}
+
+@if (invalidFields.Count > 0)
+{
+    <div class="alert alert-danger mb-4"
+         role="alert"
+         aria-live="assertive"
+         id="validation-summary">
+
+        <h5 class="alert-heading">
+            Please correct the following errors
+        </h5>
+
+        <p class="mb-2">
+            @invalidFields.Count field(s) need your attention before you can save this report.
+        </p>
+
+        <ul class="mb-0">
+            @foreach (var field in invalidFields)
+            {
+                <li>
+                    <a class="alert-link"
+                       href="#test-@field.TestCode">
+                        @field.TestName: @field.Error
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+}
 <div class="entry-search mb-4">
     <label for="testSearch" class="form-label">
         Find a test
@@ -52,7 +86,8 @@
 <form asp-controller="Entry"
       asp-action="Form"
       asp-route-id="@Model.ReportResultId"
-      method="post">
+      method="post"
+      novalidate>
 
     @Html.AntiForgeryToken()
 

@@ -9,4 +9,6 @@ public class ReportResultSummary
 	public DateTime AvailedOn { get; set; }
 	public string Status { get; set; } = "";
 	public DateTime? UpdatedOn { get; set; }
+	public string? DiagnosticLab { get; set; }
+	public string? LabRemarks { get; set; }
 }

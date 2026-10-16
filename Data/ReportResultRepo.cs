@@ -13,7 +13,8 @@ public class ReportResultRepository : IReportResultRepository
 	{
 		const string sql = @"
             SELECT rr.ReportResultId, rr.ReportCode, r.ReportName, p.PackageName,
-                   av.AvailedOn, rr.Status, rr.UpdatedOn
+                   av.AvailedOn, rr.Status, rr.UpdatedOn,rr.DiagnosticLab,
+rr.LabRemarks
             FROM ReportResult rr
             JOIN PackageAvailment av ON av.AvailmentId = rr.AvailmentId
             JOIN Package p ON p.PackageCode = rr.PackageCode

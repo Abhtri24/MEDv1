@@ -31,8 +31,9 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Members}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Entry}/{action=Lookup}/{id?}");
+
+app.MapGet("/", () => Results.Redirect("/Entry/Lookup"));
 
 
 app.Run();

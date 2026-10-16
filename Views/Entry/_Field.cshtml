@@ -2,14 +2,18 @@
 @{
     var inv = System.Globalization.CultureInfo.InvariantCulture;
     var f = Model;
-    var invalid = f.Error is null ? "" : " is-invalid";
+    var invalid = string.IsNullOrWhiteSpace(f.Error)
+    ? ""
+    : " is-invalid";
     var label = f.Unit is null ? f.TestName : $"{f.TestName} ({f.Unit})";
 }
 
-<div class="mb-3 entry-field"
+<div id="test-@f.TestCode"
+     class="mb-3 entry-field @(string.IsNullOrWhiteSpace(f.Error) ? "" : "has-error")"
      data-test-code="@f.TestCode"
      data-test-name="@f.TestName"
      data-unit="@f.Unit">
+
     <label class="form-label" for="f_@f.TestCode">
         @label @if (f.IsRequired) {
         <span class="text-danger">*</span>

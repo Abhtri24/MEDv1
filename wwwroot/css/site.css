@@ -65,3 +65,26 @@ body {
     outline-offset: 4px;
     border-radius: 4px;
 }
+
+.entry-field.has-error {
+    border-left: 4px solid var(--bs-danger);
+    background-color: rgba(220, 53, 69, 0.06);
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+    .entry-field.has-error .invalid-feedback {
+        display: block;
+        color: var(--bs-danger);
+        font-weight: 500;
+    }
+
+#validation-summary {
+    border-left: 5px solid var(--bs-danger);
+}
+
+.entry-field.has-error :is(input, select, textarea):focus {
+    outline: 2px solid var(--bs-danger);
+    outline-offset: 2px;
+}
