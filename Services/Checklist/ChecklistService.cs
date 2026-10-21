@@ -125,7 +125,7 @@ namespace ChecklistApp.Services
 					{
 						continue;
 					}
-
+	
 					var optionExists = await connection.ExecuteScalarAsync<int>(
 						optionSql,
 						new
