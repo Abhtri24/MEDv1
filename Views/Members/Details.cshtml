@@ -3,6 +3,16 @@
 
 <a asp-action="Index">&larr; Find member</a>
 <h2 class="mt-2">@Model.MemberName</h2>
+
+<div class="mb-3">
+    <a class="btn btn-outline-primary"
+       asp-controller="MER"
+       asp-action="Edit"
+       asp-route-id="@Model.MemberId">
+        MER — Enter / Edit
+    </a>
+</div>
+
 @if (TempData["Message"] is string message)
 {
     <div class="alert alert-success">@message</div>

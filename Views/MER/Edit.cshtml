@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "MER Enter / Edit";
+}
+
+<h2>MER Enter / Edit</h2>
+
+@await Component.InvokeAsync("Checklist", new
+{
+    tid = (int)ViewBag.TID,
+    contextType = "Member",
+    contextId = ((int)ViewBag.MemberId).ToString(),
+    contextCode = "MER",
+    employeeId = "EMP001"
+})
