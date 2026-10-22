@@ -9,7 +9,8 @@
     }
     else
     {
-        <form method="post" asp-controller="MER" asp-action="SaveChecklist">
+        <form method="post" asp-controller="MER" asp-action="SaveChecklist"
+        enctype="multipart/form-data">
             @Html.AntiForgeryToken()
 
             <input type="hidden" name="TID" value="@Model.TID" />
@@ -51,9 +52,19 @@
                                             Document required
                                         </span>
                                         <input type="file"
-                                               class="form-control form-control-sm mt-2"
-                                               accept=".pdf,.jpg,.jpeg,.png"
-                                               aria-label="Choose document for QID @item.QID" />
+       name="Items[@i].File"
+       class="form-control form-control-sm mt-2 checklist-file"
+       accept=".pdf,.jpg,.jpeg,.png"
+       aria-label="Choose document for QID @item.QID" />
+       <div class="selected-file-name small text-muted mt-1"></div>
+<div class="document-status mt-1"></div>
+
+<div class="submitted-document-options" hidden>
+    @foreach (var document in item.SubmittedDocuments)
+    {
+        <span data-option-id="@document.OptionID"></span>
+    }
+</div>
                                     }
                                     else
                                     {
@@ -155,7 +166,9 @@
             dependentQid: element.dataset.dependentQid
         }));
 
-        const items = Array.from(component.querySelectorAll(".checklist-item"));
+        const items = Array.from(
+            component.querySelectorAll(".checklist-item")
+        );
 
         function getItem(qid) {
             return items.find(item => item.dataset.qid === String(qid));
@@ -166,8 +179,46 @@
             return item?.querySelector("[data-response-qid]")?.value ?? "";
         }
 
+        function updateDocumentStatus(item) {
+            const statusContainer = item.querySelector(".document-status");
+            const submittedOptions = item.querySelectorAll(
+                ".submitted-document-options [data-option-id]"
+            );
+            const selectedOption = getSelectedOption(item.dataset.qid);
+
+            if (!statusContainer) return;
+
+            statusContainer.replaceChildren();
+
+            if (!selectedOption) return;
+
+            const isSubmitted = Array.from(submittedOptions).some(
+                option => option.dataset.optionId === selectedOption
+            );
+
+            if (isSubmitted) {
+                const badge = document.createElement("span");
+                badge.className = "badge bg-success";
+                badge.textContent = "Submitted";
+                statusContainer.appendChild(badge);
+            }
+        }
+
+        function updateSelectedFileName(item) {
+            const fileInput = item.querySelector(".checklist-file");
+            const fileNameContainer = item.querySelector(".selected-file-name");
+
+            if (!fileInput || !fileNameContainer) return;
+
+            fileNameContainer.textContent = fileInput.files.length > 0
+                ? "Selected file: " + fileInput.files[0].name
+                : "";
+        }
+
         function evaluateVisibility() {
-            const visible = new Set(items.map(item => item.dataset.qid));
+            const visible = new Set(
+                items.map(item => item.dataset.qid)
+            );
 
             for (const rule of rules) {
                 visible.delete(rule.dependentQid);
@@ -200,19 +251,49 @@
                 if (!isVisible) {
                     const response = item.querySelector("[data-response-qid]");
                     const remark = item.querySelector("textarea");
+                    const fileInputs = item.querySelectorAll(".checklist-file");
 
                     if (response) response.value = "";
                     if (remark) remark.value = "";
+
+                    fileInputs.forEach(input => {
+                        input.value = "";
+                    });
+
+                    updateSelectedFileName(item);
                 }
+
+                updateDocumentStatus(item);
             }
         }
 
         component.addEventListener("change", function (event) {
-            if (event.target.matches("[data-response-qid]")) {
-                evaluateVisibility();
-            }
-        });
+    if (event.target.matches("[data-response-qid]")) {
+        const item = event.target.closest(".checklist-item");
+        const fileInput = item?.querySelector(".checklist-file");
+
+        if (fileInput) {
+            fileInput.value = "";
+            updateSelectedFileName(item);
+        }
 
         evaluateVisibility();
+    }
+
+    if (event.target.matches(".checklist-file")) {
+        const item = event.target.closest(".checklist-item");
+
+        if (item) {
+            updateSelectedFileName(item);
+        }
+    }
+});
+
+        evaluateVisibility();
+
+        items.forEach(item => {
+            updateSelectedFileName(item);
+            updateDocumentStatus(item);
+        });
     })();
 </script>

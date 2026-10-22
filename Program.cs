@@ -16,6 +16,8 @@ builder.Services.AddScoped<IEntryFormService, EntryFormService>();
 builder.Services.AddScoped<IRequirementService, RequirementService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<MERTransactionService>();
+builder.Services.AddScoped<DocumentService>();
+builder.Services.AddScoped<ChecklistWorkflowCoordinator>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -10,12 +10,16 @@ namespace MEDv1.Controllers
 		private readonly MERTransactionService _transactionService;
 		private readonly IChecklistService _checklistService;
 
+		private readonly ChecklistWorkflowCoordinator _workflowCoordinator;
+
 		public MERController(
 			MERTransactionService transactionService,
-			IChecklistService checklistService)
+			IChecklistService checklistService,
+			ChecklistWorkflowCoordinator workflowCoordinator)
 		{
 			_transactionService = transactionService;
 			_checklistService = checklistService;
+			_workflowCoordinator = workflowCoordinator;
 		}
 
 		[HttpGet]
@@ -35,7 +39,7 @@ namespace MEDv1.Controllers
 		public async Task<IActionResult> SaveChecklist(
 			[FromForm] ChecklistPageViewModel checklist)
 		{
-			await _checklistService.SaveChecklistAsync(checklist);
+			await _workflowCoordinator.ProcessAtomicSaveAsync(checklist);
 
 			TempData["Message"] = "MER checklist saved successfully.";
 

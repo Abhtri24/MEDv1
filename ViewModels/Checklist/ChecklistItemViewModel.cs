@@ -1,4 +1,6 @@
-﻿using ChecklistApp.Models;
+﻿
+using ChecklistApp.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace ChecklistApp.ViewModels
 {
@@ -19,6 +21,15 @@ namespace ChecklistApp.ViewModels
 		public string? NewRemark { get; set; }
 
 		public List<ChecklistResponseHistory> History { get; set; }
+			= new();
+
+		public IFormFile? File { get; set; }
+
+		public int? SavedDocumentOptionID { get; set; }
+
+		public bool HasSubmittedDocument { get; set; }
+
+		public List<SubmittedDocumentStatus> SubmittedDocuments { get; set; }
 			= new();
 	}
 }
