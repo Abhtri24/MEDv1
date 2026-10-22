@@ -2,6 +2,7 @@
 using MEDv1.Abstractions;
 using MEDv1.Models;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.Data.SqlClient;
 namespace MEDv1.Data;
 
 public class ReportResultRepository : IReportResultRepository
@@ -62,37 +63,105 @@ rr.LabRemarks
 		return rows.ToDictionary(v => v.TestCode);
 	}
 
-	public async Task SaveValuesAsync(int reportResultId, string reportCode,
-	IEnumerable<SavedValues> toSave, IEnumerable<string> toDelete, string updatedBy)
+	public async Task SaveValuesAsync(
+	int reportResultId,
+	string reportCode,
+	IEnumerable<SavedValues> toSave,
+	IEnumerable<string> toDelete,
+	string updatedBy)
 	{
-		const string upsertSql = @"
-        UPDATE TestResult
-        SET ValueNumber = @ValueNumber, ValueText = @ValueText, ValueDate = @ValueDate
-        WHERE ReportResultId = @reportResultId AND TestCode = @TestCode;
-        IF @@ROWCOUNT = 0
-            INSERT INTO TestResult (ReportResultId, TestCode, ReportCode, ValueNumber, ValueText, ValueDate)
-            VALUES (@reportResultId, @TestCode, @reportCode, @ValueNumber, @ValueText, @ValueDate);";
-
-		const string deleteSql = @"
-        DELETE FROM TestResult
-        WHERE ReportResultId = @reportResultId AND TestCode = @TestCode;";
-
-		const string statusSql = @"
-        UPDATE ReportResult
-        SET Status = 'ENTERED', UpdatedOn = SYSDATETIME(), UpdatedBy = @updatedBy
-        WHERE ReportResultId = @reportResultId;";
-
-		var upserts = toSave.Select(v => new { reportResultId, reportCode, v.TestCode, v.ValueNumber, v.ValueText, v.ValueDate });
-		var deletes = toDelete.Select(code => new { reportResultId, TestCode = code });
-
 		await using var connection = await _db.OpenAsync();
-		await using var transaction = await connection.BeginTransactionAsync();
+		using var transaction = connection.BeginTransaction();
+
+		try
+		{
+			await SaveValuesAsync(
+				reportResultId,
+				reportCode,
+				toSave,
+				toDelete,
+				updatedBy,
+				connection,
+				transaction);
+
+			transaction.Commit();
+		}
+		catch
+		{
+			try { transaction.Rollback(); } catch { }
+			throw;
+		}
+	}
+
+	public async Task SaveValuesAsync(
+		int reportResultId,
+		string reportCode,
+		IEnumerable<SavedValues> toSave,
+		IEnumerable<string> toDelete,
+		string updatedBy,
+		SqlConnection connection,
+		SqlTransaction transaction)
+	{
+		if (connection.State != System.Data.ConnectionState.Open ||
+			!ReferenceEquals(transaction.Connection, connection))
+		{
+			throw new InvalidOperationException(
+				"An open connection and its associated transaction are required.");
+		}
+
+		const string upsertSql = """
+        UPDATE TestResult
+        SET ValueNumber = @ValueNumber,
+            ValueText = @ValueText,
+            ValueDate = @ValueDate
+        WHERE ReportResultId = @reportResultId
+          AND TestCode = @TestCode;
+
+        IF @@ROWCOUNT = 0
+            INSERT INTO TestResult
+                (ReportResultId, TestCode, ReportCode,
+                 ValueNumber, ValueText, ValueDate)
+            VALUES
+                (@reportResultId, @TestCode, @reportCode,
+                 @ValueNumber, @ValueText, @ValueDate);
+        """;
+
+		const string deleteSql = """
+        DELETE FROM TestResult
+        WHERE ReportResultId = @reportResultId
+          AND TestCode = @TestCode;
+        """;
+
+		const string statusSql = """
+        UPDATE ReportResult
+        SET Status = 'ENTERED',
+            UpdatedOn = SYSDATETIME(),
+            UpdatedBy = @updatedBy
+        WHERE ReportResultId = @reportResultId;
+        """;
+
+		var upserts = toSave.Select(v => new
+		{
+			reportResultId,
+			reportCode,
+			v.TestCode,
+			v.ValueNumber,
+			v.ValueText,
+			v.ValueDate
+		});
+
+		var deletes = toDelete.Select(code => new
+		{
+			reportResultId,
+			TestCode = code
+		});
 
 		await connection.ExecuteAsync(upsertSql, upserts, transaction);
 		await connection.ExecuteAsync(deleteSql, deletes, transaction);
-		await connection.ExecuteAsync(statusSql, new { reportResultId, updatedBy }, transaction);
-
-		await transaction.CommitAsync();
+		await connection.ExecuteAsync(
+			statusSql,
+			new { reportResultId, updatedBy },
+			transaction);
 	}
 
 	public async Task<EntryHeader?> GetEntryHeaderByLabReportIdAsync(

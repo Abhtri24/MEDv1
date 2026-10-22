@@ -1,0 +1,189 @@
+﻿
+@model MEDv1.ViewModels.CbcAtomicityDemoViewModel
+
+@{
+    ViewData["Title"] = "CBC Atomicity Demo";
+}
+
+<h2>CBC Atomicity Demo</h2>
+
+<p class="text-muted">
+    This test page demonstrates saving medical results, checklist answers,
+    and uploaded documents in one transaction.
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @Model.ErrorMessage
+    </div>
+}
+
+<div class="mb-3">
+    <span class="badge text-bg-secondary" id="step-indicator">
+        @(Model.ShowChecklist
+            ? "Step 2 of 2 — Follow-up Checklist"
+            : "Step 1 of 2 — CBC Results")
+    </span>
+</div>
+
+<form asp-controller="CbcDemo"
+      asp-action="Save"
+      method="post"
+      enctype="multipart/form-data"
+      id="cbc-demo-form">
+
+    @Html.AntiForgeryToken()
+
+    <input type="hidden"
+           name="MedicalForm.ReportResultId"
+           value="@Model.MedicalForm.ReportResultId" />
+
+    <input type="hidden"
+           name="Checklist.TID"
+           value="@Model.Checklist.TID" />
+
+    <input type="hidden"
+           name="Checklist.ContextType"
+           value="@Model.Checklist.ContextType" />
+
+    <input type="hidden"
+           name="Checklist.ContextID"
+           value="@Model.Checklist.ContextID" />
+
+    <input type="hidden"
+           name="Checklist.ContextCode"
+           value="@Model.Checklist.ContextCode" />
+
+    <input type="hidden"
+           name="Checklist.EmployeeID"
+           value="@Model.Checklist.EmployeeID" />
+
+<section id="cbc-step-1" hidden="@Model.ShowChecklist">  
+    <h4>@Model.MedicalForm.ReportName</h4>
+
+        <p>
+            @Model.MedicalForm.MemberName ·
+            @Model.MedicalForm.PackageName
+        </p>
+
+       @foreach (var field in Model.MedicalForm.Fields)
+{
+    <partial name="~/Views/Entry/_Field.cshtml" model="field" />
+}
+
+        <button type="button"
+                class="btn btn-primary"
+                id="next-step">
+            Next: Checklist
+        </button>
+    </section>
+
+<section id="cbc-step-2" hidden="@(!Model.ShowChecklist)">
+    <h4>CBC Follow-up Checklist</h4>
+
+        @for (var i = 0; i < Model.Checklist.Items.Count; i++)
+        {
+            var item = Model.Checklist.Items[i];
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <input type="hidden"
+                           name="Checklist.Items[@i].QID"
+                           value="@item.QID" />
+
+                    <label class="form-label fw-semibold"
+                           for="checklist-option-@i">
+                        @item.RequirementDescription
+                    </label>
+
+                    <select class="form-select"
+                            id="checklist-option-@i"
+                            name="Checklist.Items[@i].SelectedOptionID">
+                        <option value="">Select a response</option>
+                        @foreach (var option in item.Options)
+                        {
+                            <option value="@option.OptionID"
+                                    selected="@(item.SelectedOptionID == option.OptionID)">
+                                @option.OptionValue
+                            </option>
+                        }
+                    </select>
+
+                    @if (item.IsDoc)
+                    {
+                        <label class="form-label mt-3"
+                               for="checklist-file-@i">
+                            Upload document
+                        </label>
+
+                        <input type="file"
+                               class="form-control"
+                               id="checklist-file-@i"
+                               name="Checklist.Items[@i].File"
+                               accept=".pdf,.jpg,.jpeg,.png" />
+                        <div class="form-text">
+                            PDF, JPG, JPEG or PNG; maximum 10 MB.
+                        </div>
+                    }
+
+                    <label class="form-label mt-3"
+                           for="checklist-remark-@i">
+                        Remark (optional)
+                    </label>
+
+                    <textarea class="form-control"
+                              id="checklist-remark-@i"
+                              name="Checklist.Items[@i].NewRemark"
+                              rows="2">@item.NewRemark</textarea>
+                </div>
+            </div>
+        }
+
+        <div class="d-flex gap-2">
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    id="previous-step">
+                Back
+            </button>
+
+            <button type="submit" class="btn btn-success">
+                Final Save
+            </button>
+        </div>
+    </section>
+</form>
+
+@section Scripts {
+    <script src="~/js/entry-search.js"
+            asp-append-version="true"></script>
+
+   <script>
+    (() => {
+        const firstStep = document.getElementById("cbc-step-1");
+        const secondStep = document.getElementById("cbc-step-2");
+        const indicator = document.getElementById("step-indicator");
+
+        function showStep(step) {
+            const showChecklist = step === 2;
+
+            firstStep.hidden = showChecklist;
+            secondStep.hidden = !showChecklist;
+
+            indicator.textContent = showChecklist
+                ? "Step 2 of 2 — Follow-up Checklist"
+                : "Step 1 of 2 — CBC Results";
+        }
+
+        document.getElementById("next-step").addEventListener("click", () => {
+            showStep(2);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        document.getElementById("previous-step").addEventListener("click", () => {
+            showStep(1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    })();
+</script>
+}

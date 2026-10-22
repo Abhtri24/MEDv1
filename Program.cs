@@ -17,6 +17,7 @@ builder.Services.AddScoped<IRequirementService, RequirementService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<MERTransactionService>();
 builder.Services.AddScoped<DocumentService>();
+builder.Services.AddScoped<CbcDemoTransactionService>();
 builder.Services.AddScoped<ChecklistWorkflowCoordinator>();
 var app = builder.Build();
 

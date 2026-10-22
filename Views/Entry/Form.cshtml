@@ -11,6 +11,9 @@
 </a>
 
 <h2 class="mt-2">@Model.ReportName</h2>
+<p class="text-danger">
+    DEBUG: ReportName = [@Model.ReportName]
+</p>
 
 <p class="text-muted">
     @Model.MemberName &middot; @Model.PackageName &middot;
@@ -93,10 +96,23 @@
 
     @foreach (var f in Model.Fields)
     {
-        <partial name="_Field" model="f" />
+        <partial name="~/Views/Entry/_Field.cshtml" model="f" />
     }
 
+    @if (Model.ReportName.Contains("Complete Blood Count", StringComparison.OrdinalIgnoreCase)
+    || Model.ReportName.Contains("CBC", StringComparison.OrdinalIgnoreCase)
+    || Model.ReportName.Contains("CBP", StringComparison.OrdinalIgnoreCase))
+{
+   <button type="submit"
+        class="btn btn-primary"
+        formaction="@Url.Action("Next", "CbcDemo", new { id = Model.ReportResultId })">
+    Next
+</button>
+}
+else
+{
     <button type="submit" class="btn btn-primary">Save</button>
+}
 </form>
 
 @section Scripts {
